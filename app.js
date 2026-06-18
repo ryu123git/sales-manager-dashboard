@@ -100,8 +100,8 @@ function renderGptAnalysis(analysis,model){
   $('gptAnalysisResult').hidden=false;$('gptAnalysisResult').innerHTML=`<div class="gpt-executive">${escapeHtml(analysis.executive_comment)}</div><div class="gpt-result-grid">${renderGptList('分析上の着眼点',analysis.observations)}${renderGptList('優先課題',analysis.priority_issues)}${renderGptList('推奨する打ち手',analysis.recommended_actions)}${renderGptList(questionTitle,analysis.manager_questions)}</div><article class="gpt-result-block"><h4>来月のKPI提案</h4><div class="gpt-kpis">${analysis.next_month_kpis.map(x=>`<div class="gpt-kpi"><strong>${escapeHtml(x.name)}</strong><span>${escapeHtml(x.target)}</span><small>${escapeHtml(x.reason)}</small></div>`).join('')}</div></article><p class="gpt-caution">${escapeHtml(analysis.caution)} / 使用モデル: ${escapeHtml(model)}</p>`;
 }
 async function runGptAnalysis(){
-  const button=$('runGptAnalysis'),status=$('gptAnalysisStatus'),context=adviceContext();button.disabled=true;button.textContent='分析中...';$('gptAnalysisResult').hidden=true;status.textContent='匿名化した集計値をGPTで分析しています。';
-  try{const response=await fetch('/api/gpt-analysis',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(buildGptAnalysisPayload({...context,scope:'office'}))});const contentType=response.headers.get('content-type')||'';if(!contentType.includes('application/json'))throw new Error('Claude分析サービスに接続できません。しばらくしてから再度お試しください。');const result=await response.json();if(!response.ok)throw new Error(result.error||'GPT分析に失敗しました。');renderGptAnalysis(result.analysis,result.model);status.textContent=`${context.office||context.label}の追加分析が完了しました。`;}
+  const button=$('runGptAnalysis'),status=$('gptAnalysisStatus'),context=adviceContext();button.disabled=true;button.textContent='分析中...';$('gptAnalysisResult').hidden=true;status.textContent='匿名化した集計値をAIで分析しています。';
+  try{const response=await fetch('/api/gpt-analysis',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(buildGptAnalysisPayload({...context,scope:'office'}))});const contentType=response.headers.get('content-type')||'';if(!contentType.includes('application/json'))throw new Error('Claude分析サービスに接続できません。しばらくしてから再度お試しください。');const result=await response.json();if(!response.ok)throw new Error(result.error||'AI分析に失敗しました。');renderGptAnalysis(result.analysis,result.model);status.textContent=`${context.office||context.label}の追加分析が完了しました。`;}
   catch(error){status.textContent=`エラー: ${error.message}`;}
   finally{button.disabled=false;button.textContent='追加分析を実行';}
 }
@@ -110,14 +110,14 @@ function renderMemberAdvice(analysis,model){
 }
 async function runMemberAdvice(){
   const context=adviceContext();if(context.scope!=='member')return;
-  const button=$('runMemberAdvice'),status=$('memberAdviceStatus');button.disabled=true;button.textContent='分析中...';$('memberAdviceResult').hidden=false;$('memberAdviceResult').innerHTML=`<div class="gpt-executive">${escapeHtml(context.label)}向けの担当者アドバイスを作成しています...</div>`;status.textContent='匿名化した担当者集計値をGPTで分析しています。';
+  const button=$('runMemberAdvice'),status=$('memberAdviceStatus');button.disabled=true;button.textContent='分析中...';$('memberAdviceResult').hidden=false;$('memberAdviceResult').innerHTML=`<div class="gpt-executive">${escapeHtml(context.label)}向けの担当者アドバイスを作成しています...</div>`;status.textContent='匿名化した担当者集計値をAIで分析しています。';
   try{const response=await fetch('/api/gpt-analysis',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(buildGptAnalysisPayload(context))});const contentType=response.headers.get('content-type')||'';if(!contentType.includes('application/json'))throw new Error('追加分析用サーバーに接続できません。');const result=await response.json();if(!response.ok)throw new Error(result.error||'担当者アドバイスに失敗しました。');renderMemberAdvice(result.analysis,result.model);status.textContent=`${context.label}の担当者アドバイスが完了しました。`;}
   catch(error){status.textContent=`エラー: ${error.message}`;}
   finally{button.disabled=false;button.textContent='担当者アドバイス';}
 }
 function updateMemberAdvicePanel(){
   const context=adviceContext(),show=context.scope==='member';$('memberAdvicePanel').classList.toggle('show',show);
-  if(show){$('memberAdviceDescription').textContent=`${context.office} / ${context.label} の匿名化集計を使って担当者向けにGPTが助言します。`;$('memberAdviceStatus').textContent='必要に応じて「担当者アドバイス」を実行してください。';}
+  if(show){$('memberAdviceDescription').textContent=`${context.office} / ${context.label} の匿名化集計を使って担当者向けにAIが助言します。`;$('memberAdviceStatus').textContent='必要に応じて「担当者アドバイス」を実行してください。';}
   else{$('memberAdviceResult').hidden=true;$('memberAdviceResult').innerHTML='';$('memberAdviceStatus').textContent='営業所名と担当者名を選択してください。';}
 }
 function render(){const data=filteredData();const members=new Set(data.map(x=>x.member));const avg=data.length?data.reduce((s,x)=>s+x.score,0)/data.length:0;const high=data.filter(x=>x.score>=5).length;
