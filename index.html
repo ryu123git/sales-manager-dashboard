@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>活動報告ダッシュボード</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .data-warning{display:flex;align-items:center;gap:10px;margin:-2px 0 12px;padding:10px 13px;border:1px solid #f2d49c;border-radius:9px;background:#fff9eb;color:#7d5a19;font-size:11px}
+    .data-warning strong{flex:none;padding:3px 7px;border-radius:5px;background:#f3a72f;color:#fff;font-size:9px}
+    .data-warning[hidden]{display:none}
+    .category-row{grid-template-columns:1fr 1fr}
+    .category-panel{padding:20px}
+    .category-chart{display:grid;gap:14px;min-height:146px}
+    .category-row-item{display:grid;grid-template-columns:34px 1fr 42px 34px;align-items:center;gap:10px}
+    .category-code{width:30px;height:30px;display:grid;place-items:center;border-radius:8px;background:color-mix(in srgb,var(--category-color) 12%,white);color:var(--category-color);font-size:12px;font-weight:800}
+    .category-track{height:10px;border-radius:10px;background:#edf2f7;overflow:hidden}
+    .category-fill{height:100%;min-width:3px;border-radius:10px}
+    .category-row-item strong{font-size:12px;text-align:right}
+    .category-row-item small{font-size:9px;color:#8a96a6;text-align:right}
+    .interview-quality-panel{padding:20px;margin-bottom:16px}
+    .evaluation-actions{display:flex;align-items:center;gap:10px}
+    .mini-button{border:1px solid #d9e1ec;background:#fff;border-radius:7px;padding:6px 9px;color:#526174;font-size:9px;cursor:pointer}
+    .evaluation-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
+    .evaluation-card{min-width:0;padding:14px;text-align:left;border:1px solid #e6ebf2;border-radius:11px;background:#fff;cursor:pointer;transition:.18s;color:var(--ink)}
+    .evaluation-card:hover{transform:translateY(-2px);box-shadow:0 6px 16px #17223412}
+    .evaluation-card.selected{border-color:#1479e8;box-shadow:0 0 0 2px #1479e81c}
+    .evaluation-card.risk-metric.selected{border-color:#e45e68;box-shadow:0 0 0 2px #e45e681c}
+    .evaluation-card-head{display:flex;justify-content:space-between;gap:5px;align-items:start;min-height:34px;font-size:10px;font-weight:700;line-height:1.5}
+    .evaluation-card-head b{flex:none;padding:3px 5px;border-radius:4px;background:#e9f6f3;color:#0e9a72;font-size:7px;letter-spacing:.08em}
+    .risk-metric .evaluation-card-head b{background:#fff0f1;color:#dc5560}
+    .evaluation-value{display:flex;align-items:baseline;margin:5px 0 8px}
+    .evaluation-value strong{font-size:25px;line-height:1}
+    .evaluation-value small{margin-left:2px;color:#77869a}
+    .evaluation-value em{margin-left:auto;color:#637187;font-size:10px;font-style:normal;font-weight:700}
+    .evaluation-track{height:5px;border-radius:6px;background:#edf2f7;overflow:hidden}
+    .evaluation-track i{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,#13a879,#22c6a0)}
+    .risk-metric .evaluation-track i{background:linear-gradient(90deg,#ef8b73,#e45e68)}
+    .evaluation-card p{height:31px;overflow:hidden;margin:8px 0 0;color:#8491a2;font-size:8px;line-height:1.55}
+    .evaluation-note{margin:11px 0 0;color:#8793a3;font-size:9px}
+    .manager-advice-panel{padding:20px;margin-bottom:16px}
+    .manager-advice-heading{align-items:end}
+    .advice-office-select{display:grid;gap:5px;color:#718096;font-size:9px;font-weight:700}
+    .advice-office-select select{min-width:160px;height:34px;padding:0 9px;border:1px solid #dfe5ed;border-radius:7px;background:#fff;color:#334156;font-size:11px}
+    .benchmark-strip{display:flex;align-items:center;gap:12px;padding:10px 13px;border-radius:9px;background:#f5f8fc;color:#68778b;font-size:10px}
+    .benchmark-strip span{padding:3px 6px;border-radius:4px;background:#e4edf7;color:#48709d;font-size:8px;font-weight:800}
+    .benchmark-strip strong{color:#27364a}.benchmark-strip i{font-style:normal}
+    .advice-summary{display:flex;align-items:center;gap:14px;margin:14px 0;padding:14px;border:1px solid #dce9f7;border-radius:11px;background:#f5faff}
+    .advice-summary>div:last-child{min-width:0}.advice-summary strong{font-size:15px}.advice-summary p{margin:4px 0 0;color:#66758a;font-size:10px;line-height:1.6}
+    .radar-section{margin:14px 0;padding:16px;border:1px solid #e7ecf2;border-radius:11px;background:#fbfcfe}
+    .radar-heading{display:flex;justify-content:space-between;align-items:flex-start}.radar-heading h3{margin:0;font-size:13px}
+    .radar-legend{display:flex;gap:14px;color:#718096;font-size:9px}.radar-legend span{display:flex;align-items:center;gap:5px}.radar-legend i{width:15px;height:3px;border-radius:3px}.office-radar-color{background:#1479e8}.average-radar-color{background:#f39a36}.radar-legend b{color:#526174}
+    .radar-layout{display:grid;grid-template-columns:minmax(360px,1fr) 230px;align-items:center;gap:20px;max-width:820px;margin:5px auto 0}.quality-radar{min-height:315px}.quality-radar svg{display:block;width:100%;height:315px;overflow:visible}.radar-values{display:grid;gap:7px}.radar-value-row{display:grid;grid-template-columns:1fr 42px 42px;gap:7px;align-items:center;padding:7px 8px;border-radius:7px;background:#fff;font-size:9px}.radar-value-row span{color:#526174;font-weight:600}.radar-value-row b{text-align:right;color:#1479e8}.radar-value-row small{text-align:right;color:#d7842d}.radar-note{margin:0;text-align:center;color:#8793a3;font-size:8px}
+    .advice-grade{flex:none;min-width:66px;padding:9px 8px;border-radius:8px;text-align:center;font-size:11px;font-weight:800}
+    .grade-good{background:#e5f8f1;color:#0b9269}.grade-standard{background:#edf4fc;color:#2977c7}.grade-alert{background:#fff0f1;color:#d7515c}
+    .advice-content-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .advice-block{display:flex;gap:11px;padding:14px;border:1px solid #e8edf3;border-radius:10px;background:#fff}
+    .advice-block>span{flex:none;width:25px;height:25px;display:grid;place-items:center;border-radius:7px;background:#edf5fd;color:#2478cb;font-size:8px;font-weight:800}
+    .issue-block>span{background:#fff3e5;color:#dd8425}.action-block>span{background:#e8f8f3;color:#11936d}.question-block>span{background:#f0edfc;color:#7057cb}
+    .advice-block{font-family:"Noto Sans JP","Yu Gothic","Meiryo",sans-serif}
+    .advice-block h3,.kpi-advice-block h3{margin:1px 0 9px;font-size:14px;font-weight:700}.advice-block ul,.advice-block ol{margin:0;padding-left:21px;color:#3f4e62;font-size:13px;font-weight:600;line-height:1.8}.advice-block li+li{margin-top:5px}
+    .good-text{color:#109572}.alert-text{color:#d75b64}
+    .kpi-advice-block{display:flex;align-items:center;gap:22px;margin-top:10px;padding:14px;border-radius:11px;background:#112b49;color:#fff}.kpi-advice-block .section-label{color:#6ccaf2}.kpi-advice-block h3{margin:0;white-space:nowrap}
+    .advice-kpi-list{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;width:100%}.advice-kpi{padding:9px 11px;border-radius:8px;background:#ffffff0d}.advice-kpi span,.advice-kpi strong,.advice-kpi small{display:block}.advice-kpi span{color:#abc0d8;font-size:8px}.advice-kpi strong{margin:3px 0;font-size:13px}.advice-kpi small{color:#7f9ab7;font-size:8px}
+    .gpt-analysis-panel{margin-top:12px;padding:16px;border:1px solid #dbe8f7;border-radius:11px;background:linear-gradient(135deg,#f2f8ff,#f9fcff)}.gpt-analysis-header{display:flex;justify-content:space-between;align-items:center;gap:16px}.gpt-analysis-header h3{margin:2px 0 4px;font-size:14px}.gpt-analysis-header p{margin:0;color:#718096;font-size:9px}.gpt-analysis-button{border:0;border-radius:8px;padding:10px 14px;background:#1479e8;color:#fff;font-weight:700;font-size:11px;cursor:pointer}.gpt-analysis-button:disabled{opacity:.55;cursor:wait}.gpt-analysis-status{margin:10px 0 0;color:#65758a;font-size:10px}.gpt-analysis-result{display:grid;gap:10px;margin-top:12px}.gpt-executive{padding:13px;border-left:4px solid #1479e8;border-radius:7px;background:#fff;color:#27364a;font-size:12px;font-weight:700;line-height:1.75}.gpt-result-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}.gpt-result-block{padding:12px;border-radius:8px;background:#fff}.gpt-result-block h4{margin:0 0 7px;color:#1c3657;font-size:11px}.gpt-result-block ul{margin:0;padding-left:18px;color:#4d5d72;font-size:10px;line-height:1.75}.gpt-kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:7px}.gpt-kpi{padding:9px;border-radius:7px;background:#f4f8fc}.gpt-kpi strong,.gpt-kpi span,.gpt-kpi small{display:block}.gpt-kpi strong{font-size:10px}.gpt-kpi span{margin:3px 0;color:#1479e8;font-size:12px;font-weight:800}.gpt-kpi small{color:#718096;font-size:8px;line-height:1.5}.gpt-caution{margin:0;color:#8793a3;font-size:8px}
+    .member-advice-panel{display:none;margin-bottom:16px;padding:18px;border:1px solid #dbe8f7;border-radius:12px;background:linear-gradient(135deg,#f6fbff,#ffffff)}.member-advice-panel.show{display:block}.member-advice-header{display:flex;align-items:center;justify-content:space-between;gap:16px}.member-advice-header h2{margin:2px 0 4px;font-size:16px}.member-advice-header p{margin:0;color:#718096;font-size:10px}.member-advice-result{display:grid;gap:10px;margin-top:12px}
+    body{font-size:18px}
+    .brand strong{font-size:19px!important}.brand span,.privacy-note strong{font-size:14px!important}.privacy-note p{font-size:13px!important}.nav-item{font-size:18px!important}
+    .topbar h1{font-size:36px!important}.subtitle{font-size:18px!important}.eyebrow,.section-label{font-size:14px!important}.primary-button,.text-button,.reset-button{font-size:17px!important}
+    .status-strip,.panel-note,.evaluation-note,.radar-note,.gpt-caution{font-size:14px!important}.data-warning{font-size:15px!important}.data-warning strong{font-size:12px!important}
+    .filters label,.advice-office-select{font-size:14px!important}.filters input,.filters select,.advice-office-select select{font-size:18px!important;height:44px!important}
+    .panel-heading h2{font-size:22px!important}.kpi-head{font-size:15px!important}.kpi-head b{font-size:11px!important}.kpi-card>strong{font-size:44px!important}.kpi-card>small,.kpi-foot{font-size:15px!important}
+    .insight-banner strong{font-size:18px!important}.insight-banner span{font-size:12px!important}.legend,.bar-row,.bar-value,.quality-item,.rank-name,.rank-score span,.trend-labels{font-size:14px!important}.rank-score strong{font-size:17px!important}
+    .keyword{font-size:17px!important}.category-code,.category-row-item strong{font-size:17px!important}.category-row-item small{font-size:14px!important}.radar-heading h3{font-size:19px!important}.radar-legend,.radar-value-row{font-size:14px!important}.quality-radar text{font-size:14px!important}
+    .evaluation-card-head{font-size:15px!important}.evaluation-card-head b{font-size:10px!important}.evaluation-value strong{font-size:34px!important}.evaluation-value em,.evaluation-card p{font-size:14px!important;height:auto!important}
+    .benchmark-strip{font-size:15px!important}.benchmark-strip span{font-size:12px!important}.advice-summary strong{font-size:22px!important}.advice-summary p{font-size:16px!important}.advice-grade{font-size:16px!important}.advice-block>span{font-size:12px!important}.advice-block h3,.kpi-advice-block h3{font-size:20px!important}.advice-block ul,.advice-block ol{font-size:17px!important}
+    .advice-kpi span,.advice-kpi small{font-size:13px!important}.advice-kpi strong{font-size:18px!important}.gpt-analysis-header h3,.member-advice-header h2{font-size:22px!important}.gpt-analysis-header p,.member-advice-header p,.gpt-analysis-status{font-size:15px!important}.gpt-analysis-button{font-size:17px!important}.gpt-executive{font-size:18px!important}.gpt-result-block h4{font-size:17px!important}.gpt-result-block ul{font-size:16px!important}.gpt-kpi strong{font-size:15px!important}.gpt-kpi span{font-size:18px!important}.gpt-kpi small{font-size:13px!important}
+    table{font-size:16px!important}th,td{font-size:16px!important}.score-badge{font-size:15px!important}.empty-state{font-size:16px!important}.toast{font-size:16px!important}
+    @media(max-width:1250px){.evaluation-grid{grid-template-columns:repeat(3,1fr)}}
+    @media(max-width:1050px){.category-row{grid-template-columns:1fr}}
+    @media(max-width:800px){.advice-content-grid{grid-template-columns:1fr}.kpi-advice-block{align-items:flex-start;flex-direction:column}.advice-kpi-list{grid-template-columns:repeat(2,1fr)}.benchmark-strip{align-items:flex-start;flex-wrap:wrap}.radar-layout{grid-template-columns:1fr}.radar-values{grid-template-columns:repeat(2,1fr)}.gpt-result-grid{grid-template-columns:1fr}}
+    @media(max-width:600px){.evaluation-grid{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">AR</div>
+        <div><strong>Activity Report</strong><span>営業活動ダッシュボード</span></div>
+      </div>
+      <nav class="nav-list" aria-label="メインメニュー">
+        <button class="nav-item active">概要</button>
+        <button class="nav-item" data-scroll="officeSection">営業所分析</button>
+        <button class="nav-item" data-scroll="memberSection">担当者分析</button>
+        <button class="nav-item" data-scroll="detailSection">活動明細</button>
+      </nav>
+      <div class="privacy-note">
+        <span class="privacy-icon">✓</span>
+        <div><strong>ローカル処理</strong><p>Excelデータは外部へ送信されません</p></div>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">SALES ACTIVITY INTELLIGENCE</p>
+          <h1>活動報告ダッシュボード</h1>
+          <p class="subtitle">活動の量と質から、次に取るべきアクションを見える化</p>
+        </div>
+        <div class="upload-area">
+          <input id="fileInput" type="file" accept=".xlsx,.xls,.csv" hidden>
+          <button id="uploadButton" class="primary-button"><span>＋</span> Excelをアップロード</button>
+          <button id="sampleButton" class="text-button">サンプルを表示</button>
+        </div>
+      </header>
+
+      <section id="dropZone" class="drop-zone" hidden>
+        <strong>ここにExcelファイルをドロップ</strong>
+        <span>.xlsx / .xls / .csv に対応</span>
+      </section>
+
+      <section class="status-strip">
+        <div><span class="status-dot"></span><strong id="dataSource">サンプルデータ</strong><span id="recordStatus">9件を読み込み済み</span></div>
+        <span id="updatedAt"></span>
+      </section>
+
+      <section id="dataWarning" class="data-warning" hidden>
+        <strong>データ確認</strong>
+        <span id="dataWarningText"></span>
+      </section>
+
+      <section class="filters panel">
+        <label>期間<input id="dateFrom" type="date"></label>
+        <span class="range-separator">〜</span>
+        <label class="date-to"><span class="sr-only">終了日</span><input id="dateTo" type="date"></label>
+        <label>営業所<select id="officeFilter"><option value="">すべて</option></select></label>
+        <label>担当者<select id="memberFilter"><option value="">すべて</option></select></label>
+        <button id="resetFilters" class="reset-button">条件をリセット</button>
+      </section>
+
+      <section class="kpi-grid">
+        <article class="kpi-card accent-blue"><div class="kpi-head"><span>総活動件数</span><b>ACTIVITY</b></div><strong id="totalActivities">0</strong><small>件</small><div class="kpi-foot" id="activityFoot">対象期間の活動量</div></article>
+        <article class="kpi-card accent-green"><div class="kpi-head"><span>活動担当者</span><b>MEMBER</b></div><strong id="activeMembers">0</strong><small>名</small><div class="kpi-foot" id="memberFoot">1人あたり 0件</div></article>
+        <article class="kpi-card accent-orange"><div class="kpi-head"><span>質スコア平均</span><b>QUALITY</b></div><strong id="qualityAverage">0.0</strong><small>pt</small><div class="kpi-foot">DDD列の平均値</div></article>
+        <article class="kpi-card accent-purple"><div class="kpi-head"><span>高品質活動</span><b>HIGH SCORE</b></div><strong id="highQuality">0</strong><small>件</small><div class="kpi-foot" id="highQualityFoot">スコア5以上</div></article>
+      </section>
+
+      <section class="insight-banner">
+        <div class="insight-icon">AI</div>
+        <div><span>INSIGHT</span><strong id="insightText">活動データを分析しています</strong></div>
+      </section>
+
+      <section class="panel interview-quality-panel">
+        <div class="panel-heading">
+          <div><span class="section-label">INTERVIEW QUALITY</span><h2>売上につながる面談 評価指標</h2></div>
+          <div class="evaluation-actions"><span class="panel-note">活動内容の記載から自動判定</span><button id="clearEvaluationFilter" class="mini-button" hidden>明細絞り込みを解除</button></div>
+        </div>
+        <div id="evaluationMetrics" class="evaluation-grid"></div>
+        <p class="evaluation-note">文章中の表現をルール判定した参考値です。カードを選択すると、該当する活動明細を確認できます。</p>
+      </section>
+
+      <section class="panel manager-advice-panel">
+        <div class="panel-heading manager-advice-heading">
+          <div><span class="section-label">MANAGER COACHING</span><h2 id="adviceTitle">営業所別 所長アドバイス</h2></div>
+          <label class="advice-office-select">対象営業所<select id="adviceOffice"></select></label>
+        </div>
+        <div id="adviceBenchmark" class="benchmark-strip"></div>
+        <div id="adviceSummary" class="advice-summary"></div>
+        <div class="radar-section">
+          <div class="radar-heading"><div><span class="section-label">QUALITY RADAR</span><h3>面談の質 レーダーチャート</h3></div><div class="radar-legend"><span><i class="office-radar-color"></i><b id="radarOfficeName">対象営業所</b></span><span><i class="average-radar-color"></i>全営業所平均</span></div></div>
+          <div class="radar-layout"><div id="qualityRadar" class="quality-radar"></div><div id="radarValues" class="radar-values"></div></div>
+          <p class="radar-note">「非面談」は低いほど良好、その他の指標は高いほど良好です。</p>
+        </div>
+        <div class="advice-content-grid">
+          <article class="advice-block status-block"><span>01</span><div><h3>現状評価</h3><div id="adviceCurrent"></div></div></article>
+          <article class="advice-block issue-block"><span>02</span><div><h3>課題</h3><div id="adviceIssues"></div></div></article>
+          <article class="advice-block action-block"><span>03</span><div><h3>打ち手</h3><div id="adviceActions"></div></div></article>
+          <article class="advice-block question-block"><span>04</span><div><h3 id="adviceQuestionTitle">所長が確認すべき質問</h3><div id="adviceQuestions"></div></div></article>
+        </div>
+        <div class="kpi-advice-block"><div><span class="section-label">NEXT MONTH KPI</span><h3>来月の推奨KPI</h3></div><div id="adviceKpis" class="advice-kpi-list"></div></div>
+        <div class="gpt-analysis-panel">
+          <div class="gpt-analysis-header"><div><span class="section-label">GPT ADDITIONAL ANALYSIS</span><h3>GPTによる追加分析</h3><p>匿名化した件数・割合・平均との差だけを送信します。Excel本文、医師名、施設名、担当者名は送信しません。</p></div><button id="runGptAnalysis" class="gpt-analysis-button">追加分析を実行</button></div>
+          <p id="gptAnalysisStatus" class="gpt-analysis-status">営業所と期間を確認してから実行してください。</p>
+          <div id="gptAnalysisResult" class="gpt-analysis-result" hidden></div>
+        </div>
+        <p class="evaluation-note">全営業所平均との比較に基づく参考助言です。AMTULの望ましい構成は戦略・担当市場により異なるため、構成差を対話の起点として表示します。</p>
+      </section>
+
+      <section class="dashboard-grid">
+        <article class="panel chart-panel" id="officeSection">
+          <div class="panel-heading"><div><span class="section-label">OFFICE PERFORMANCE</span><h2>営業所別 活動量と質</h2></div><div class="legend"><span><i class="legend-bar"></i>活動件数</span><span><i class="legend-dot"></i>平均質スコア</span></div></div>
+          <div id="officeChart" class="bar-chart"></div>
+        </article>
+        <article class="panel quality-panel">
+          <div class="panel-heading"><div><span class="section-label">QUALITY BALANCE</span><h2>活動の質 分布</h2></div></div>
+          <div class="donut-wrap">
+            <div id="qualityDonut" class="donut"><div><strong id="positiveRate">0%</strong><span>ポジティブ</span></div></div>
+            <div id="qualityLegend" class="quality-legend"></div>
+          </div>
+        </article>
+      </section>
+
+      <section class="dashboard-grid second-row">
+        <article class="panel" id="memberSection">
+          <div class="panel-heading"><div><span class="section-label">MEMBER RANKING</span><h2>担当者パフォーマンス</h2></div><span class="panel-note">上位5名</span></div>
+          <div id="memberRanking" class="ranking-list"></div>
+        </article>
+        <article class="panel">
+          <div class="panel-heading"><div><span class="section-label">DAILY TREND</span><h2>日別 活動推移</h2></div></div>
+          <div id="trendChart" class="trend-chart"></div>
+        </article>
+      </section>
+
+      <section class="dashboard-grid category-row">
+        <article class="panel category-panel">
+          <div class="panel-heading"><div><span class="section-label">AMTUL MIX</span><h2>AMTUL別 活動件数</h2></div><span class="panel-note">絞り込み条件に連動</span></div>
+          <div id="amtulChart" class="category-chart"></div>
+        </article>
+        <article class="panel category-panel">
+          <div class="panel-heading"><div><span class="section-label">SCALE MIX</span><h2>スケール別 活動件数</h2></div><span class="panel-note">ターゲット列を集計</span></div>
+          <div id="scaleChart" class="category-chart scale-chart"></div>
+        </article>
+      </section>
+
+      <section class="panel keyword-panel">
+        <div class="panel-heading"><div><span class="section-label">ACTIVITY TOPICS</span><h2>活動内容の注目キーワード</h2></div><span class="panel-note">記録内容から自動抽出</span></div>
+        <div id="keywords" class="keyword-list"></div>
+      </section>
+
+      <section id="memberAdvicePanel" class="member-advice-panel">
+        <div class="member-advice-header">
+          <div><span class="section-label">MEMBER GPT ADVICE</span><h2>担当者アドバイス</h2><p id="memberAdviceDescription">営業所名と担当者名を選択すると、担当者向けの追加分析を実行できます。</p></div>
+          <button id="runMemberAdvice" class="gpt-analysis-button">担当者アドバイス</button>
+        </div>
+        <p id="memberAdviceStatus" class="gpt-analysis-status">営業所名と担当者名を選択してください。</p>
+        <div id="memberAdviceResult" class="member-advice-result" hidden></div>
+      </section>
+
+      <section class="panel detail-panel" id="detailSection">
+        <div class="panel-heading"><div><span class="section-label">ACTIVITY DETAIL</span><h2>活動明細</h2></div><span id="detailCount" class="panel-note"></span></div>
+        <div class="table-wrap"><table><thead><tr><th>活動日</th><th>営業所</th><th>担当者</th><th>医師名</th><th>使用資材</th><th>活動内容</th><th>質</th></tr></thead><tbody id="detailBody"></tbody></table></div>
+      </section>
+    </main>
+  </div>
+  <div id="toast" class="toast" role="status"></div>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+  <script src="app.js?v=20260618-3"></script>
+</body>
+</html>
