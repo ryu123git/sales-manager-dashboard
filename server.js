@@ -42,7 +42,7 @@ async function analyze(req,res){
   ].join('\n');
   try{
     const client=new Anthropic();
-    const message=await client.messages.create({model:modelId,max_tokens:2000,thinking:{type:'adaptive'},system:systemPrompt,messages:[{role:'user',content:`分析対象データ: ${JSON.stringify(body)}`}]});
+    const message=await client.messages.create({model:modelId,max_tokens:8000,thinking:{type:'adaptive'},system:systemPrompt,messages:[{role:'user',content:`分析対象データ: ${JSON.stringify(body)}`}]});
     const raw=message.content.find(b=>b.type==='text')?.text||'';
     if(!raw)throw new Error('分析結果を取得できませんでした。');
     const start=raw.indexOf('{'),end=raw.lastIndexOf('}');
