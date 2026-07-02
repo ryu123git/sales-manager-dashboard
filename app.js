@@ -30,7 +30,8 @@ function mapRows(rows){
   const headers=Object.keys(rows[0]);const keyMap={};
   for(const [field,names] of Object.entries(aliases)){keyMap[field]=headers.find(h=>names.some(n=>normalize(h)===normalize(n)))||headers.find(h=>names.some(n=>normalize(h).includes(normalize(n))))}
   if(!keyMap.activity&&!keyMap.office)throw new Error('「営業所名」「活動内容」などの見出しを確認してください。');
-  return rows.map(r=>({office:String(r[keyMap.office]??'未設定').trim(),member:String(r[keyMap.member]??'未設定').trim(),date:excelDate(r[keyMap.date]),target:String(r[keyMap.target]??''),facility:String(r[keyMap.facility]??''),doctor:String(r[keyMap.doctor]??''),amtul:String(r[keyMap.amtul]??''),material:String(r[keyMap.material]??''),activity:String(r[keyMap.activity]??''),score:Number(r[keyMap.score])||0})).filter(r=>r.office||r.activity);
+  const hasScore=keyMap.score&&rows.some(r=>r[keyMap.score]!==''&&r[keyMap.score]!=null&&!isNaN(Number(r[keyMap.score]))&&Number(r[keyMap.score])!==0);
+  return rows.map(r=>{const activity=String(r[keyMap.activity]??'');const rawScore=keyMap.score?r[keyMap.score]:null;const score=hasScore&&rawScore!==''&&rawScore!=null?Number(rawScore)||0:autoScore(activity);return {office:String(r[keyMap.office]??'未設定').trim(),member:String(r[keyMap.member]??'未設定').trim(),date:excelDate(r[keyMap.date]),target:String(r[keyMap.target]??''),facility:String(r[keyMap.facility]??''),doctor:String(r[keyMap.doctor]??''),amtul:String(r[keyMap.amtul]??''),material:String(r[keyMap.material]??''),activity,score}}).filter(r=>r.office||r.activity);
 }
 function loadFile(file){
   if(!window.XLSX){showToast('Excel読込ライブラリを読み込めません。インターネット接続を確認してください。');return}
@@ -65,6 +66,14 @@ const evaluationRules=[
   {id:'intent',label:'処方意向',short:'意向獲得',good:true,description:'使いたい、処方予定、採用・発注など前向きな意向',patterns:[/使いたい|使ってみ|使うかも|使う可能性|処方してみ|処方予定|処方する|変えていきたい|切り替えたい|採用|発注|承認|薬審通過|導入|試してみ|良い薬|いいかも|AAAに変わ|症例増や|紹介しておいて/]},
   {id:'noReaction',label:'反応なし・非面談',short:'要改善活動',good:false,description:'面会不可、反応なし、資料提供・案内のみなど',patterns:[/面会不可|不面|面会.*断|会えな|多忙.*面会|資料提供のみ|【資料提供】|資料提供$|お手紙|受付で.*配布|案内を配布|案内対応|WEB案内→ふーん|食いつきが無|反応なし|EPPV対応$|社内研修会$|シンポジウム参加$/i]}
 ];
+function autoScore(activity){
+  const item={activity};
+  if(evaluationRules.find(r=>r.id==='intent')&&evaluationMatches(item,evaluationRules.find(r=>r.id==='intent')))return 15;
+  if(evaluationRules.find(r=>r.id==='noReaction')&&evaluationMatches(item,evaluationRules.find(r=>r.id==='noReaction')))return -1;
+  const goodRules=evaluationRules.filter(r=>r.good&&r.id!=='intent');
+  if(goodRules.some(r=>evaluationMatches(item,r)))return 5;
+  return 0;
+}
 function evaluationMatches(item,rule){const text=String(item.activity||'').replace(/\s+/g,'');return rule.patterns.some(pattern=>pattern.test(text))}
 function rateFor(data,rule){return data.length?data.filter(x=>evaluationMatches(x,rule)).length/data.length*100:0}
 function amtulMix(data){const mix={A:0,M:0,T:0,U:0};data.forEach(x=>{const key=String(x.amtul||'').trim();mix[key]=(mix[key]||0)+1});return mix}
